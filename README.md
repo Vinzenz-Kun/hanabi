@@ -1,6 +1,6 @@
 # Hanabi
 
-Mehrspieler-Umsetzung des Kartenspiels Hanabi mit Python-Server und Pygame-Client. Dazu gehören Lobby, Spielstände und eine deutsch/englische Oberfläche.
+Multiplayer version of the card game Hanabi, with a Python server and a Pygame client. It includes a lobby, saved games, and an English interface. Press `L` to switch the interface to German.
 
 ## Start
 
@@ -10,22 +10,22 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Zwei Terminals, jeweils im Ordner `src`:
+From the `src` directory, in two terminals:
 
 ```
 python -m hanabi.core.server
 python -m hanabi.core.client_launcher
 ```
 
-Den Client für jeden weiteren Spieler noch einmal starten.
+Start the client again for each additional player.
 
-## Steuerung
+## Controls
 
-- Sprache wechseln: `L`
-- Navigationsmenü: `Esc`
-- Spiel speichern: `S`
-- Ein Speicherstand lässt sich nur laden, wenn dieselben Spieler in denselben Lobby-Slots sitzen
+- Switch language: `L`
+- Navigation menu: `Esc`
+- Save the game: `S`
+- A save can be loaded only when the same players sit in the same lobby slots
 
-## Diagramme
+## Diagrams
 
-Die PlantUML-Dateien (`*.puml`) beschreiben Kern, Oberfläche und den Ablauf. Die SVGs sind die gerenderten Fassungen. `Anleitung zum Start von Hanabi.pdf` beschreibt den Start noch einmal im Detail.
+The PlantUML files (`*.puml`) describe the core, the interface, and the message flow. The SVGs are the rendered versions. `Anleitung zum Start von Hanabi.pdf` is a German start guide.

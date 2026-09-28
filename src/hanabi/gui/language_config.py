@@ -4,12 +4,12 @@ class LanguageConfig:
         Initialize the language configuration.
 
         This class stores all the translations for the text that appears in the game GUI.
-        The default language is German ('de').
+        The default language is English ('en').
 
         :return: None
         """
 
-        self.current_language = "de"  # Default to german
+        self.current_language = "en"
         self.translations = {
             "en": {
                 "fireworks": "Fireworks",
@@ -103,6 +103,10 @@ class LanguageConfig:
                 "invalid_character_host": "Invalid character. Only letters and numbers are allowed.",
                 "invalid_character_port": "Invalid character. Only numbers are allowed.",
                 "invalid_port_length": "Invalid port. Please enter a number between 1024 and 65535.",
+                "port_type_error": "Enter only numbers for the port.",
+                "username_empty": "Choose a username. It cannot be empty.",
+                "port_range_error": "Port must be between 1024 and 65535.",
+                "connection_failed": "Could not connect to the server.",
                 "number_hint": "number_hint",
                 "color_hint": "color_hint",
                 "": "",
@@ -201,6 +205,10 @@ class LanguageConfig:
                 "invalid_character_host": "Ungültiges Zeichen. Nur Buchstaben, Zahlen und Punkte sind erlaubt.",
                 "invalid_character_port": "Ungültiges Zeichen. Nur Zahlen sind erlaubt.",
                 "invalid_port_length": "Die Portnummer muss zwischen 1024 und 65535 liegen.",
+                "port_type_error": "Für den Port nur Zahlen eingeben.",
+                "username_empty": "Der Nutzername muss gesetzt sein und darf nicht leer sein.",
+                "port_range_error": "Der Port muss zwischen 1024 und 65535 liegen.",
+                "connection_failed": "Verbindung zum Server fehlgeschlagen.",
                 "Color Hint": "Farbhinweis",
                 "Number Hint": "Nummerhinweis",
                 "": "",

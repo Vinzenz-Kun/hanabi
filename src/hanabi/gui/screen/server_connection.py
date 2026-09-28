@@ -238,17 +238,9 @@ class ServerConnectScreen:
         :return: str
         """
         messages = {
-            "port_type_error": self.gui.language_config.get_translation(
-                "Bitte geben Sie für die Port-Verbindung nur Nummern ein!"
-            ),
-            "username_empty": self.gui.language_config.get_translation(
-                "Der Nutzername muss festgelegt werden und darf nicht leer sein!"
-            ),
-            "port_range_error": self.gui.language_config.get_translation(
-                "Port muss zwischen 1024 und 65535 liegen."
-            ),
-            "connection_failed": self.gui.language_config.get_translation(
-                "Verbindung zum Server fehlgeschlagen!"
-            ),
+            "port_type_error": self.gui.language_config.get_translation("port_type_error"),
+            "username_empty": self.gui.language_config.get_translation("username_empty"),
+            "port_range_error": self.gui.language_config.get_translation("port_range_error"),
+            "connection_failed": self.gui.language_config.get_translation("connection_failed"),
         }
         return messages.get(self.error_type, "")
