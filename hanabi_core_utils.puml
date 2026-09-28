@@ -1,0 +1,150 @@
+@startuml hanabi core and utils
+allowmixing
+
+class Server {
+    -server_clients: dict
+    -games: dict
+    -lobbies: dict
+    -shutdown_event: threading.Event
+    -obgames: dict
+    -oblobbies: dict
+    
+    +__init__()
+    +start_server(host, port)
+    +handle_client(client_socket, client_address)
+    +disconnect_client(username, client_socket)
+    +create_lobby(host_username)
+    +join_lobby(username, game_id)
+    +finalize_lobby(game_id, settings)
+    +broadcast(game_id, message, sender_socket)
+    +console_input_listener()
+    +handle_client_disconnet(username, client_socket)
+    +observe_lobby(username, game_id): dict
+    +sync_game_state(game_id, game_state)
+    }
+
+class Client {
+    -logger
+    -username: str
+    -host: str
+    -port: int
+    -s: socket
+    -connected: bool
+    -gui: GUI
+    -lobby: list[str]
+    -game_state: dict
+    -game_id: int
+    -connection_error: str
+    -status: str
+    -lobby_settings: dict
+
+    +__init__()
+    +connect_to_server()
+    +disconnet_from_server()
+    +handle_disconnect()
+    +send_message(message: dict)
+    +receive_message()
+    +handle_server_response(response: dict)
+    +handle_gui_response()
+    +get_players()
+    +create_lobby()
+    +join_lobby(game_id: int)
+    +finalize_lobby()
+    +join_game(game_id: int)
+    +play_card(card_index: int)
+    +discard_card(card_index: int)
+    +give_hint(target_player: str, hint_type: str, hint_value)
+    +render_gui()
+    +observe_lobby(game_id: int)
+    +update_local_game_state(new_game_state:dict)
+    +update_game_state()
+
+}
+
+
+
+class Game {
+    -game_ID: int
+    -num_players: int
+    -player_names: list
+    -players: list[Player]
+    -deck: list [Card]
+    -fireworks: dict
+    -hint_token: int
+    -storm_token: int
+    -discard_pile: list
+    -score: int
+    -valid_round: int
+    -current_player_index: int
+    -game_over: bool
+    -is_victory: bool
+    -log_message: list
+    -color_rush: bool
+    -final_round_counter: int
+    -count_discard_pile: int
+    -count_draw_pile: int
+      
+
+    +__init__(game_ID, num_players, player_names, hint_tokens, storm_tokens, color_rush)
+    +play_card(player, card_index)
+    +discard(player, card_index)
+    +give_hint(to_player, hint_type, card_index)
+    +finish_turn()
+    +check_game_over()
+    +calculate_score()
+    +reset()
+}
+
+class Card {
+    -color: str
+    -value: int
+    -color_hint: bool
+    -value_hint: bool
+
+    +__init__(color, value)
+}
+
+class Player {
+    -name: str
+    -hand: list[Card]
+    -hand_size: int
+    -number: int
+
+    +__init__(name, number)
+}
+
+component lib.py [
+    +class_to_dict(obj): dict
+    +dict_to_game(game_state: dict): Game
+    +setup_logger(name, logfile, level): Logger
+]
+
+class GameStateManager{
+    -BASER_DIR: str
+    -SAVE_DIR: str
+
+    +ensure_save_directory()
+    +get_saved_games(): list
+    +get_players(filename: str): list
+    +save_game_state(game: Game, filename: str)
+    +load_game_state(filename: str) Game
+    +can_load_game(): bool
+
+}
+
+class GUI {
+    "in hanabi_gui.puml"
+}
+
+Player -- Card
+Game -- Player
+Game -- Card
+Client o-- Game
+Server o-- Game
+Client o-- GUI
+Client o-- lib.py
+Game o-- lib.py
+Server o-- lib.py
+GameStateManager o-- Game
+GameStateManager o-- lib.py
+@enduml

@@ -1,0 +1,39 @@
+@startuml sequencediagram
+participant Server
+participant Client_1
+participant Client_2
+
+Client_1 -> Server : connect_to_server
+Server -> Client_1 : joined_server
+Client_2 -> Server : connect_to_server
+Server -> Client_2 : joined_server
+Client_1 -> Server : create_lobby
+Server -> Client_1 : lobby_created
+Client_2 -> Server : get_games
+Server -> Client_2 : provide_games_id
+Client_2 -> Server : join_lobby
+Server -> Client_2 : lobby_joined
+Server -> Client_1 : player_joined
+Client_2 -> Server : get_players
+Server -> Client_2 : provide_players
+Client_1 -> Server : finalize lobby
+Server -> Client_1 : game_started
+& Server -> Client_2 : game_started
+Client_2 -> Server : game_state_update (play card, give hint, discard card)
+Server -> Client_1 : sync_state
+&Server -> Client_2 : sync_state
+Client_1 -> Server : game_state_update (play card, give hint, discard card)
+Server -> Client_1 : sync_state
+&Server -> Client_2 : sync_state
+==...==
+==...==
+==...==
+Client_2 -> Server : game_ended
+Server -> Client_1 : game_ended
+&Server -> Client_2 : game_ended
+Client_1 -> Server : return_to_lobby
+Server -> Client_1 : resetting_lobby
+Server -> Client_2 : resetting_lobby
+
+
+@enduml

@@ -1,0 +1,265 @@
+@startuml hanabi_gui
+allowmixing
+
+class CardSelection {
+    -player
+    -index
+
+    +__init__
+    +set_selection(player, index)
+    +clear_selection()
+    +is_selected: bool
+}
+
+class Colors {
+    -black: Color
+    -white: Color
+    -blue: Color
+    -green: Color
+    -red: Color
+    -gray: Color
+    -yellow: Color
+}
+
+class GameDataAccess {
+    -client: Client
+
+    +__init__(client)
+    +get_current_player(): Player
+    +get_current_player_index(): int
+    get_current_player_name(): str
+    +get_game_state(): GameState
+    +get_username(): str
+    +get_players(): List[Player]
+    +get_player_hand(player_name: str): Hand
+    +get_player(player_name: str): Player
+    +get_card(player_name: str, card_index: int): Card
+    +set_current_player_index(current_player_index: int):
+}
+
+class Timer {
+    -time_limit: int
+    -start_time: float
+    -is_active: bool
+    -font
+    -green: pygame.Color
+    -yellow: pygame.Color
+    -red: pygame.Color
+    -gray: pygame.Color
+
+    +__init__()
+    +start()
+    +stop()
+    +restart()
+    +get_time_remaining()
+    +time_over()
+    +draw(window, x, y)
+}
+
+class GUI {
+    -client: Client
+    -language_config: LanguageConfig
+    -window_width: int
+    -window_height: int
+    -font: pygame.font.Font
+    -font_small: pygame.font.Font
+    -window: pygame.Surface
+    -running: bool
+    -current_screen: str
+    -screens: dict[str, Any]
+    -clock: pygame.time.Clock
+    -game_ids: list
+    -visited_screens: list[str]
+    -popup_message: str
+
+    +__init__(client: Client)
+    +initialize_language_config()
+    +update_display()
+    +toggle_language()
+    +handle_generic_input(event: pygame.event.Event)
+    +handle_error(error_message: str)
+    +run()
+    +add_log_message(message: list[str])
+    +load_game(game_file: str)
+    +show_popup(message: str)
+    +display_popup(message: str)"
+}
+
+class LanguageConfig {
+    -current_language: str
+    -translations: dict
+    
+    +LanguageConfig()
+    +set_language(language_code: str)
+    +get_translation(key: str): str
+    +get_color_translation(color: str): str
+}
+
+class GameConnectScreen {
+    -gui: GUI
+    -font: pygame.font.Font
+    -colors: dict
+    -refresh_button: pygame.Rect
+    -create_button: pygame.Rect
+    -join_buttons: dict
+    -observe_buttons: dict
+    
+    +__init__(gui: GUI)
+    +create_ui_elements()
+    +render()
+    +handle_input(events: list)
+}
+
+class GameScreen {
+    -gui: GUI
+    -client: Client
+    -data_service: GameDataAccess
+    -font
+    -colors: dict
+    -selected_card: CardSelection
+    -timer: Timer
+    -last_player_index
+    -observtarget
+    -play_button
+    -discrad_button
+    -hint_button
+    -log_area
+    -watch_all_button
+    -chatmessages: list
+    -log_scroll_offset
+
+   +__init__(gui)
+   +create_ui_elements()
+   +render()
+   +draw_tokens()
+   +draw_discard_pile()
+   +draw_played_piles()
+   +draw_player_hands()
+   +draw_current_turn()
+   +handle_timer_expiration()
+   +draw_action_button()
+   +draw_watch_all_button()
+   +draw_endgame_conditions()
+   +draw_log_block()
+   +add_log_message(chat)
+   +handle_input(events)
+   +discard_selected_card()
+   +finish_turn
+   +highlight_hint_cards(player, hint_type, hint_value)
+   +check_fireworks_completion()
+   +give_hint_to_player()
+   +reset_game_ui()
+}
+
+class LobbyScreen {
+    -gui: GUI
+    -font
+    -colors: dict
+    -timer_active: bool
+    -timer_seconds: str
+    -timer_input_active: bool
+    -start_button
+    -refresh_button
+    -storm_buttons: list
+    -hint_buttons: list
+    -color_rush_button
+    -timer_button
+    -timer_input
+    -player_list: list
+    -saved_games_buttons: dict
+    -active_saved_game: str
+
+    +__init__(gui)
+    +create_ui_elements()
+    +update_host_settings()
+    +render()
+    +draw_parameter_buttons(values: range, parameter_namer: str): list
+    +handle_input(events: list)
+}
+
+class MenuScreen {
+    -gui: GUI
+    -font
+    -colors: dict
+    -menu_buttons: dict
+
+    +__init__(gui)
+    +create_ui_elements()
+    +render()
+    +handle_input(events)
+    +transition_to_screen(screen)
+}
+
+class ResultScreen {
+    -gui: GUI
+    -client: Client
+    -font
+    -colors: dict
+    -exit_button
+    -result_data
+
+    +__init__(gui)
+    +create_ui_elements()
+    +set_result_data(gamer_over_data: dict)
+    +render()
+    +get_performance_message(score: int)
+    +handle_input(events: list)
+    +return_to_lobby()
+}
+
+class ServerConnectScreen{
+    -gui: GUI
+    -client: Client
+    -font
+    -colors: dict
+    -input_active: dict
+    -error_type: str
+    -host_input_box
+    -port_input_box
+    -username_input_box
+    -connect_button
+
+    +__init__(gui)
+    +create_input_boxes()
+    +reder()
+    +draw_input_field()
+    +handle_input()
+    +_set_active_input()
+    +_handle_text_input()
+    +try_connect()
+    +get_error_message()
+}
+
+class GameStateManager {
+    "in hanabi_core_utils.puml"
+}
+
+class Client {
+    "in hanabi_core_utils.puml"
+}
+
+component lib.py[
+    "in hanabi_core_utils.puml"
+]
+
+GUI o-- Client
+GUI o-- LanguageConfig
+GUI o-- ServerConnectScreen
+GUI o-- GameConnectScreen
+GUI o-- LobbyScreen
+GUI o-- GameScreen
+GUI o-- ResultScreen
+GUI o-- MenuScreen
+GUI o-- GameStateManager
+GameConnectScreen o-- Colors
+GameScreen o-- Colors
+GameScreen o-- CardSelection
+GameScreen o-- GameDataAccess
+GameScreen o-- Timer
+GameScreen o-- GameStateManager
+LobbyScreen o-- Colors
+LobbyScreen o-- GameStateManager
+ResultScreen o-- lib.py
+ServerConnectScreen o-- Colors
+
+@enduml

@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+*.log
+.venv/
+venv/
+src/hanabi/utils/saved_games/*.json

@@ -1,0 +1,6 @@
+{
+    "client_host": "localhost",
+    "client_advised_port": 1234,
+    "server_host": "",
+    "server_advised_port": 1234
+}
