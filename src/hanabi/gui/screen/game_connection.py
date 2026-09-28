@@ -1,4 +1,5 @@
 import pygame
+from hanabi.gui.fonts import ui_font
 from hanabi.gui.widgets.colors import Colors as colors
 
 
@@ -13,7 +14,7 @@ class GameConnectScreen:
         :return: None
         """
         self.gui = gui
-        self.font = pygame.font.SysFont("times new roman", 20)
+        self.font = ui_font(20)
         self.colors = {
             "black": colors.black,
             "white": colors.white,

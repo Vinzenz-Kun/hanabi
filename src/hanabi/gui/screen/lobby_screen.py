@@ -229,7 +229,9 @@ class LobbyScreen:
                     )
                     pygame.draw.rect(self.gui.window, color, button_rect)
                     button_text = self.font.render(
-                        f"Laden: {game_file}", True, self.colors["black"]
+                        f"{self.gui.language_config.get_translation('load_save')}: {game_file}",
+                        True,
+                        self.colors["black"],
                     )
                     self.gui.window.blit(
                         button_text, (button_rect.x + 10, button_rect.y + 5)

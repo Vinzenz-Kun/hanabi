@@ -5,6 +5,7 @@ from hanabi.gui.screen.game_connection import GameConnectScreen
 from hanabi.gui.screen.lobby_screen import LobbyScreen
 from hanabi.gui.screen.game_screen import GameScreen
 from hanabi.gui.screen.result import ResultScreen
+from hanabi.gui.fonts import ui_font
 from hanabi.gui.language_config import LanguageConfig
 from hanabi.gui.screen.menu import MenuScreen
 from hanabi.utils.state_manager import GameStateManager
@@ -24,8 +25,8 @@ class GUI:
         self.language_config = LanguageConfig()
         self.window_width = 900
         self.window_height = 800
-        self.font = pygame.font.SysFont("times new roman", 20)
-        self.font_small = pygame.font.SysFont("times new roman", 10)
+        self.font = ui_font(20)
+        self.font_small = ui_font(14)
         self.window = pygame.display.set_mode((self.window_width, self.window_height))
         self.running = True
         self.current_screen = "server_connect"
@@ -75,17 +76,11 @@ class GUI:
 
     def toggle_language(self) -> None:
         """
-        Toggles the application's language between English and German.
-
-        This function checks the current language setting and switches to the
-        other language. The new language is then applied using the language
-        configuration.
+        Cycles the interface through English, German, and Japanese.
 
         :return: None
         """
-        current_language = self.language_config.current_language
-        new_language = "de" if current_language == "en" else "en"
-        self.language_config.set_language(new_language)
+        self.language_config.cycle_language()
 
     def handle_generic_input(self, event: pygame.event) -> None:
         """
@@ -209,7 +204,7 @@ class GUI:
         :param message: The string to display in the popup message.
         :return: None
         """
-        font = pygame.font.SysFont("times new roman", 24)
+        font = ui_font(24)
         text = font.render(message, True, (255, 255, 255))
         rect = text.get_rect(center=(self.window_width // 2, self.window_height // 2))
         pygame.draw.rect(self.window, (0, 0, 0), rect.inflate(20, 10))

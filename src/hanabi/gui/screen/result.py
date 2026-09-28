@@ -1,5 +1,6 @@
 import pygame
 import hanabi.utils.lib as lib
+from hanabi.gui.fonts import ui_font
 
 
 class ResultScreen:
@@ -13,7 +14,7 @@ class ResultScreen:
         """
         self.gui = gui
         self.client = gui.client
-        self.font = pygame.font.SysFont("times new roman", 20)
+        self.font = ui_font(20)
         self.colors = {
             "black": pygame.Color(0, 0, 0),
             "white": pygame.Color(255, 255, 255),

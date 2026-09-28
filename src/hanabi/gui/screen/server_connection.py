@@ -1,5 +1,6 @@
 from hanabi.gui.widgets.cardselection import CardSelection
-import pygame  # type: ignore
+import pygame
+from hanabi.gui.fonts import ui_font  # type: ignore
 from hanabi.gui.widgets.colors import Colors as colors
 
 
@@ -14,7 +15,7 @@ class ServerConnectScreen:
         """
         self.gui = gui
         self.client = gui.client
-        self.font = pygame.font.SysFont("times new roman", 20)
+        self.font = ui_font(20)
         self.colors = {
             "black": colors.black,
             "white": colors.white,

@@ -364,7 +364,9 @@ class GameScreen:
         :return: None
         """
         pygame.draw.rect(self.gui.window, (255, 0, 0), self.watch_all_button)
-        watch_all_text = self.font.render("Watch All", True, (255, 255, 255))
+        watch_all_text = self.font.render(
+            self.gui.language_config.get_translation("watch_all"), True, (255, 255, 255)
+        )
         self.gui.window.blit(watch_all_text, (405, 155))
 
     def draw_endgame_conditions(self) -> None:

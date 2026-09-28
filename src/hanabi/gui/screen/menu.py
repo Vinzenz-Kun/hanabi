@@ -1,4 +1,5 @@
 import pygame  # type: ignore
+from hanabi.gui.fonts import ui_font
 from hanabi.gui.widgets.colors import Colors as colors
 
 
@@ -12,7 +13,7 @@ class MenuScreen:
         """
 
         self.gui = gui
-        self.font = pygame.font.SysFont("times new roman", 24)
+        self.font = ui_font(24)
         self.colors = {
             "black": pygame.Color(0, 0, 0),
             "white": pygame.Color(255, 255, 255),

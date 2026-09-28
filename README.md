@@ -1,6 +1,8 @@
 # Hanabi
 
-Multiplayer version of the card game Hanabi, with a Python server and a Pygame client. It includes a lobby, saved games, and an English interface. Press `L` to switch the interface to German.
+[日本語](README.ja.md)
+
+Multiplayer version of the card game Hanabi, with a Python server and a Pygame client. It includes a lobby, saved games, and an English interface. Press `L` to cycle the interface through English, German, and Japanese.
 
 ## Start
 
@@ -21,7 +23,7 @@ Start the client again for each additional player.
 
 ## Controls
 
-- Switch language: `L`
+- Cycle language (English, German, Japanese): `L`
 - Navigation menu: `Esc`
 - Save the game: `S`
 - A save can be loaded only when the same players sit in the same lobby slots

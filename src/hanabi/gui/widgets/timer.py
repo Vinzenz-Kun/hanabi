@@ -1,4 +1,5 @@
 import pygame
+from hanabi.gui.fonts import ui_font
 import time
 
 
@@ -16,7 +17,7 @@ class Timer:
         self.time_limit = 120  #  Default time limit of 2 minutes per turn
         self.start_time = None
         self.is_active = False
-        self.font = pygame.font.SysFont("Arial", 24)
+        self.font = ui_font(24)
 
         self.timer_active = False
 
