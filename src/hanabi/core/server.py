@@ -112,7 +112,7 @@ class Server:
 
         :return: None.
         """
-        # Main Loop
+        username = None
         try:
             server_logger.info(f"New connection from {client_address}\n")
             client_socket.send(
@@ -305,7 +305,8 @@ class Server:
             server_logger.error(f"Error with client {client_address}: {e}\n")
             # self.disconnect_client(username, client_socket)
         finally:
-            self.handle_client_disconnect(username, client_socket)
+            if username:
+                self.handle_client_disconnect(username, client_socket)
             # self.disconnect_client(username, client_socket)
             # client_socket.close()
 
@@ -604,7 +605,10 @@ class Server:
         :return: None
         """
         while not self.shutdown_event.is_set():
-            command = input()
+            try:
+                command = input()
+            except EOFError:
+                return
             if command.lower() == "shutdown":
                 server_logger.info("Shutdown command received. Closing server...\n")
                 self.shutdown_event.set()

@@ -1,5 +1,6 @@
 from hanabi.gui.widgets.cardselection import CardSelection
 import pygame
+from hanabi.gui import theme
 from hanabi.gui.fonts import ui_font  # type: ignore
 from hanabi.gui.widgets.colors import Colors as colors
 
@@ -34,12 +35,10 @@ class ServerConnectScreen:
 
         :return: None
         """
-        self.host_input_box = pygame.Rect(150, 100, 200, 30)
-        self.port_input_box = pygame.Rect(150, 150, 100, 30)
-        self.username_input_box = pygame.Rect(150, 200, 200, 30)
-        self.connect_button = pygame.Rect(
-            self.gui.window_width // 2 + 100, 300, 100, 30
-        )
+        self.host_input_box = pygame.Rect(390, 230, 260, 40)
+        self.port_input_box = pygame.Rect(390, 290, 260, 40)
+        self.username_input_box = pygame.Rect(390, 350, 260, 40)
+        self.connect_button = pygame.Rect(390, 420, 260, 44)
 
     def render(self) -> None:
         """
@@ -48,19 +47,18 @@ class ServerConnectScreen:
         :return: None
         """
         # Clear the screen and set the caption
-        self.gui.window.fill(self.colors["black"])
+        theme.paint(self.gui.window)
         pygame.display.set_caption(
             self.gui.language_config.get_translation("connection_details")
         )
-
-        # Render the title
-        title = self.font.render(
+        theme.panel(self.gui.window, pygame.Rect(180, 150, 540, 360))
+        title = ui_font(36).render(
             self.gui.language_config.get_translation("hanabi_connection"),
             True,
-            self.colors["white"],
+            theme.GOLD,
         )
         self.gui.window.blit(
-            title, (self.gui.window_width // 2 - title.get_width() // 2, 50)
+            title, (self.gui.window_width // 2 - title.get_width() // 2, 80)
         )
 
         # Draw the input fields and labels
@@ -84,22 +82,20 @@ class ServerConnectScreen:
         )
 
         # Draw the connect button
-        pygame.draw.rect(self.gui.window, self.colors["green"], self.connect_button)
-        connect_text = self.font.render(
+        theme.button(
+            self.gui.window,
+            self.connect_button,
             self.gui.language_config.get_translation("connect"),
-            True,
-            self.colors["black"],
+            self.font,
         )
-        self.gui.window.blit(
-            connect_text, (self.connect_button.x + 10, self.connect_button.y + 5)
-        )
-
-        # Display error message if any
         if self.error_type:
-            error_text = self.font.render(
-                self.get_error_message(), True, self.colors["red"]
+            theme.text(
+                self.gui.window,
+                self.get_error_message(),
+                self.font,
+                (200, 540),
+                theme.DANGER,
             )
-            self.gui.window.blit(error_text, (20, 300))
 
     def _draw_input_field(
         self, label: str, input_box: pygame.Rect, value: str, active: bool
@@ -113,13 +109,8 @@ class ServerConnectScreen:
         :param active: Whether the input field is currently active
         :return: None
         """
-        label_surface = self.font.render(label + ":", True, self.colors["white"])
-        self.gui.window.blit(label_surface, (input_box.x - 100, input_box.y + 5))
-
-        box_color = self.colors["blue"] if active else self.colors["gray"]
-        pygame.draw.rect(self.gui.window, box_color, input_box)
-        value_surface = self.font.render(value, True, self.colors["white"])
-        self.gui.window.blit(value_surface, (input_box.x + 10, input_box.y + 5))
+        theme.text(self.gui.window, label, self.font, (input_box.x - 150, input_box.y + 8), theme.MUTED)
+        theme.field(self.gui.window, input_box, value, self.font, active)
 
     def handle_input(self, events: list[pygame.event.Event]) -> None:
         """
@@ -187,18 +178,14 @@ class ServerConnectScreen:
         else:
             if self.input_active["host"]:
                 if event.unicode.isalnum() or event.unicode == ".":
-                    self.client.username += event.unicode
+                    self.client.host += event.unicode
                 else:
                     self.gui.show_popup(
                         f"{self.gui.language_config.get_translation('invalid_character_host')}"
                     )
             elif self.input_active["port"]:
-                if event.unicode.isdigit():
+                if event.unicode.isdigit() and len(self.client.port) < 5:
                     self.client.port += event.unicode
-                    if not (1024 <= int(self.client.port) <= 65535):
-                        self.gui.show_popup(
-                            f"{self.gui.language_config.get_translation('invalid_port_length')}"
-                        )
                 else:
                     self.gui.show_popup(
                         f"{self.gui.language_config.get_translation('invalid_character_port')}"
@@ -222,6 +209,15 @@ class ServerConnectScreen:
 
         if not self.client.username.strip():
             self.error_type = "username_empty"
+            return
+        try:
+            port = int(self.client.port)
+        except ValueError:
+            self.error_type = "port_type_error"
+            return
+        if not 1024 <= port <= 65535:
+            self.error_type = "port_range_error"
+            return
         else:
             self.error_type = None
             self.client.connect_to_server()

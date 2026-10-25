@@ -1,25 +1,32 @@
 # Hanabi
 
-[日本語](README.ja.md)
+**English** · [Deutsch](README.de.md) · [日本語](README.ja.md)
 
 Multiplayer version of the card game Hanabi, with a Python server and a Pygame client. It includes a lobby, saved games, and an English interface. Press `L` to cycle the interface through English, German, and Japanese.
 
 ## Start
 
+Double-click `dist/Hanabi.exe`. The window stays open. Start the server once, then start a client for each player. Each one opens in its own window. Closing the launcher does not close them.
+
+Build that exe from this folder:
+
 ```
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+pip install pyinstaller
+pyinstaller Hanabi.spec
 ```
 
-From the `src` directory, in two terminals:
+From source, in the `src` directory:
+
+```
+python -m hanabi.launcher
+```
+
+Or start the pieces yourself, still from `src`:
 
 ```
 python -m hanabi.core.server
 python -m hanabi.core.client_launcher
 ```
-
-Start the client again for each additional player.
 
 ## Controls
 

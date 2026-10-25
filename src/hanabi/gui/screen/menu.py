@@ -1,4 +1,5 @@
 import pygame  # type: ignore
+from hanabi.gui import theme
 from hanabi.gui.fonts import ui_font
 from hanabi.gui.widgets.colors import Colors as colors
 
@@ -30,11 +31,11 @@ class MenuScreen:
         :return: None
         """
         self.menu_buttons = {
-            "server_connect": pygame.Rect(100, 100, 200, 40),
-            "game_connect": pygame.Rect(100, 160, 200, 40),
-            "lobby": pygame.Rect(100, 220, 200, 40),
-            "game": pygame.Rect(100, 280, 200, 40),
-            "result": pygame.Rect(100, 340, 200, 40),
+            "server_connect": pygame.Rect(300, 140, 300, 48),
+            "game_connect": pygame.Rect(300, 204, 300, 48),
+            "lobby": pygame.Rect(300, 268, 300, 48),
+            "game": pygame.Rect(300, 332, 300, 48),
+            "result": pygame.Rect(300, 396, 300, 48),
         }
 
     def render(self) -> None:
@@ -43,31 +44,25 @@ class MenuScreen:
 
         :return: None
         """
-        self.gui.window.fill(self.colors["black"])
+        theme.paint(self.gui.window)
         pygame.display.set_caption(self.gui.language_config.get_translation("menu"))
-        title = self.font.render(
+        title = ui_font(36).render(
             self.gui.language_config.get_translation("menu_title"),
             True,
-            self.colors["white"],
+            theme.GOLD,
         )
         self.gui.window.blit(
-            title, (self.gui.window_width // 2 - title.get_width() // 2, 50)
+            title, (self.gui.window_width // 2 - title.get_width() // 2, 48)
         )
 
         for screen, rect in self.menu_buttons.items():
-            color = (
-                self.colors["blue"]
-                if screen in self.gui.visited_screens
-                else self.colors["gray"]
-            )
-            pygame.draw.rect(self.gui.window, color, rect)
-            # screen_text = self.font.render(screen.replace("_", " ").title(), True, self.colors["white"])
-            screen_text = self.font.render(
+            theme.button(
+                self.gui.window,
+                rect,
                 self.gui.language_config.get_translation(screen),
-                True,
-                self.colors["white"],
+                self.font,
+                "accent" if screen in self.gui.visited_screens else "quiet",
             )
-            self.gui.window.blit(screen_text, (rect.x + 10, rect.y + 5))
 
     def handle_input(self, events: list[pygame.event.Event]) -> None:
         """

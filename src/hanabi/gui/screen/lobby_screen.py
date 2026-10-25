@@ -1,5 +1,7 @@
 import pygame
 
+from hanabi.gui import theme
+from hanabi.gui.fonts import ui_font
 from hanabi.gui.widgets.colors import Colors as colors
 from hanabi.utils.state_manager import GameStateManager
 
@@ -70,83 +72,67 @@ class LobbyScreen:
         :return: None
         """
 
-        self.gui.window.fill(self.colors["black"])
+        theme.paint(self.gui.window)
         pygame.display.set_caption(self.gui.language_config.get_translation("lobby"))
-        title = self.font.render(
-            f"Lobby - Game ID: {self.gui.client.game_id}", True, self.colors["white"]
+        title = ui_font(28).render(
+            f"Lobby  ·  {self.gui.client.game_id}", True, theme.GOLD
         )
-        self.gui.window.blit(title, (20, 20))
+        self.gui.window.blit(title, (32, 18))
 
         # Check if lobby exists and has players
         if self.gui.client.lobby and len(self.gui.client.lobby) > 0:
             # Display current players
-            y = 100
+            y = 110
             x = 50
             for player in self.gui.client.lobby:
-                player_text = self.font.render(
+                theme.text(
+                    self.gui.window,
                     f"{self.gui.language_config.get_translation('player')}: {player}",
-                    True,
-                    self.colors["white"],
+                    self.font,
+                    (x, y),
                 )
-                self.gui.window.blit(player_text, (x, y))
                 y += 30
                 # y += 40
             if 6 > len(self.gui.client.lobby) > 1:
-                # If lobby has the right amount of players
-                error_text = self.font.render(
-                    self.gui.language_config.get_translation("ready"),
-                    True,
-                    self.colors["green"],
-                )
-                self.gui.window.blit(error_text, (50, 70))
-
+                status = self.gui.language_config.get_translation("ready")
+                status_color = theme.GOOD
             elif len(self.gui.client.lobby) > 5:
-                # If lobby is overcrowded
-                error_text = self.font.render(
-                    self.gui.language_config.get_translation("overcrowded"),
-                    True,
-                    self.colors["red"],
-                )
-                self.gui.window.blit(error_text, (50, 70))
+                status = self.gui.language_config.get_translation("overcrowded")
+                status_color = theme.DANGER
             else:
-                # If lobby has not enough players
-                error_text = self.font.render(
-                    self.gui.language_config.get_translation("not_enough"),
-                    True,
-                    self.colors["red"],
-                )
-                self.gui.window.blit(error_text, (50, 70))
+                status = self.gui.language_config.get_translation("not_enough")
+                status_color = theme.DANGER
+            theme.text(self.gui.window, status, self.font, (50, 64), status_color)
 
             if self.gui.client.username == self.gui.client.lobby[0]:
-                self.gui.window.blit(
-                    self.font.render(
-                        self.gui.language_config.get_translation("game_settings"),
-                        True,
-                        self.colors["green"],
-                    ),
+                theme.text(
+                    self.gui.window,
+                    self.gui.language_config.get_translation("game_settings"),
+                    self.font,
                     (50, y),
+                    theme.GOLD,
                 )
                 y += 30
 
                 # Storm Tokens
-                storm_text = self.font.render(
+                theme.text(
+                    self.gui.window,
                     self.gui.language_config.get_translation("storm_tokens"),
-                    True,
-                    self.colors["white"],
+                    self.font,
+                    (50, y),
                 )
-                self.gui.window.blit(storm_text, (50, y))
                 self.storm_buttons = self.draw_parameter_buttons(
                     250, y, range(1, 4), "storm_tokens"
                 )
                 y += 50
 
                 # Hint Tokens
-                hint_text = self.font.render(
+                theme.text(
+                    self.gui.window,
                     self.gui.language_config.get_translation("hints"),
-                    True,
-                    self.colors["white"],
+                    self.font,
+                    (50, y),
                 )
-                self.gui.window.blit(hint_text, (50, y))
                 self.hint_buttons = self.draw_parameter_buttons(
                     250, y, range(1, 13), "hint_tokens"
                 )
@@ -156,28 +142,19 @@ class LobbyScreen:
                 self.timer_button.y = y
                 self.timer_input.y = y
                 timer_active = self.gui.client.lobby_settings.get("timer_active", False)
-                timer_button_color = (
-                    self.colors["green"] if timer_active else self.colors["red"]
-                )
-                pygame.draw.rect(self.gui.window, timer_button_color, self.timer_button)
-                timer_text = self.font.render(
+                theme.button(
+                    self.gui.window,
+                    self.timer_button,
                     self.gui.language_config.get_translation("activate_timer"),
-                    True,
-                    self.colors["black"],
+                    self.gui.font_small,
+                    "good" if timer_active else "quiet",
                 )
-                self.gui.window.blit(
-                    timer_text, (self.timer_button.x + 20, self.timer_button.y + 5)
-                )
-
-                # Timer Input Field
-                pygame.draw.rect(
-                    self.gui.window, self.colors["white"], self.timer_input
-                )
-                timer_value = self.font.render(
-                    str(self.timer_seconds), True, self.colors["black"]
-                )
-                self.gui.window.blit(
-                    timer_value, (self.timer_input.x + 10, self.timer_input.y + 5)
+                theme.field(
+                    self.gui.window,
+                    self.timer_input,
+                    self.timer_seconds,
+                    self.font,
+                    self.timer_input_active,
                 )
                 y += 70
 
@@ -186,35 +163,20 @@ class LobbyScreen:
                 color_rush_active = self.gui.client.lobby_settings.get(
                     "color_rush", False
                 )
-                color_rush_button_color = (
-                    self.colors["green"] if color_rush_active else self.colors["red"]
-                )
-                pygame.draw.rect(
-                    self.gui.window, color_rush_button_color, self.color_rush_button
-                )
-                color_rush_text = self.font.render(
+                theme.button(
+                    self.gui.window,
+                    self.color_rush_button,
                     self.gui.language_config.get_translation("activate_color_rush"),
-                    True,
-                    self.colors["black"],
-                )
-                self.gui.window.blit(
-                    color_rush_text,
-                    (self.color_rush_button.x + 20, self.color_rush_button.y + 5),
+                    self.gui.font_small,
+                    "good" if color_rush_active else "quiet",
                 )
 
-                # Start Game Button
-                self.start_game_button = pygame.Rect(50, y, 150, 40)
-                pygame.draw.rect(
-                    self.gui.window, self.colors["green"], self.start_game_button
-                )
-                start_text = self.font.render(
+                self.start_game_button = pygame.Rect(50, y, 160, 40)
+                theme.button(
+                    self.gui.window,
+                    self.start_game_button,
                     self.gui.language_config.get_translation("start_game"),
-                    True,
-                    self.colors["black"],
-                )
-                self.gui.window.blit(
-                    start_text,
-                    (self.start_game_button.x + 20, self.start_game_button.y + 5),
+                    self.font,
                 )
 
                 # Displaying saved games, if there are any
@@ -222,37 +184,30 @@ class LobbyScreen:
                 for game_file in saved_games:
                     button_rect = pygame.Rect(450, y, 200, 40)
                     self.saved_games_buttons[game_file] = button_rect
-                    color = (
-                        self.colors["green"]
-                        if self.actitve_saved_game == game_file
-                        else self.colors["red"]
-                    )
-                    pygame.draw.rect(self.gui.window, color, button_rect)
-                    button_text = self.font.render(
+                    theme.button(
+                        self.gui.window,
+                        button_rect,
                         f"{self.gui.language_config.get_translation('load_save')}: {game_file}",
-                        True,
-                        self.colors["black"],
-                    )
-                    self.gui.window.blit(
-                        button_text, (button_rect.x + 10, button_rect.y + 5)
+                        self.gui.font_small,
+                        "selected" if self.actitve_saved_game == game_file else "quiet",
                     )
 
-                    # Draw the expected players next to the button
                     player_list_text = ", ".join(
                         GameStateManager.get_players(game_file)
                     )
                     player_text = self.gui.font_small.render(
-                        player_list_text, True, self.colors["white"]
+                        player_list_text, True, theme.MUTED
                     )
                     self.gui.window.blit(player_text, (button_rect.x + 300, y + 5))
 
                     y += 40
 
-        pygame.draw.rect(self.gui.window, (200, 200, 200), self.language_button)
-        language_text = self.font.render(
-            self.gui.language_config.get_translation("Change Language"), True, (0, 0, 0)
+        theme.language_chip(
+            self.gui.window,
+            self.language_button,
+            self.gui.font_small,
+            self.gui.language_config.get_translation("Change Language"),
         )
-        self.gui.window.blit(language_text, (self.gui.window_width - 190, 30))
 
     def draw_parameter_buttons(
         self, x: int, y: int, values: list, parameter_name: str
@@ -269,16 +224,13 @@ class LobbyScreen:
         buttons = []
         for value in values:
             button_rect = pygame.Rect(x, y, 40, 30)
-            if self.gui.client.lobby_settings[parameter_name] == value:
-                pygame.draw.rect(
-                    self.gui.window, self.colors["green"], button_rect
-                )  # Highlight selected
-            else:
-                pygame.draw.rect(
-                    self.gui.window, self.colors["gray"], button_rect
-                )  # Default button color
-            value_text = self.font.render(str(value), True, self.colors["black"])
-            self.gui.window.blit(value_text, (button_rect.x + 10, button_rect.y + 5))
+            theme.button(
+                self.gui.window,
+                button_rect,
+                str(value),
+                self.gui.font_small,
+                "selected" if self.gui.client.lobby_settings[parameter_name] == value else "quiet",
+            )
             buttons.append((button_rect, value))
             x += 50
         return buttons

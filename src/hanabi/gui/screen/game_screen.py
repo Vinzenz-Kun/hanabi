@@ -1,7 +1,8 @@
 import pygame
+from hanabi.gui import theme
+from hanabi.gui.fonts import ui_font
 from hanabi.gui.widgets.cardselection import CardSelection
 from hanabi.gui.widgets.colors import Colors as colors
-from hanabi.gui.widgets.cardselection import CardSelection
 from hanabi.gui.widgets.game_data_access import GameDataAccess
 from hanabi.gui.widgets.timer import Timer
 from hanabi.utils.state_manager import GameStateManager
@@ -68,7 +69,7 @@ class GameScreen:
         """
         # Clear screen and set caption
         pygame.display.set_caption(self.gui.language_config.get_translation("game"))
-        self.gui.window.fill(self.colors["black"])
+        theme.paint(self.gui.window)
 
         # Draw game components
         self.draw_tokens()
@@ -83,11 +84,12 @@ class GameScreen:
         if self.observing:
             self.draw_watch_all_button()
 
-        pygame.draw.rect(self.gui.window, (200, 200, 200), self.language_button)
-        language_text = self.font.render(
-            self.gui.language_config.get_translation("Change Language"), True, (0, 0, 0)
+        theme.language_chip(
+            self.gui.window,
+            self.language_button,
+            self.gui.font_small,
+            self.gui.language_config.get_translation("Change Language"),
         )
-        self.gui.window.blit(language_text, (self.gui.window_width - 190, 30))
 
     def draw_tokens(self) -> None:
         """
@@ -99,24 +101,25 @@ class GameScreen:
         storm_tokens = self.client.game_state.storm_token
         remaining_deck_cards = len(self.client.game_state.deck)
 
-        hint_text = self.font.render(
+        theme.panel(self.gui.window, pygame.Rect(16, 12, 560, 36))
+        theme.text(
+            self.gui.window,
             f"{self.gui.language_config.get_translation('hints')}: {hint_tokens}",
-            True,
-            self.colors["white"],
+            self.gui.font_small,
+            (28, 20),
         )
-        storm_text = self.font.render(
+        theme.text(
+            self.gui.window,
             f"{self.gui.language_config.get_translation('storm_tokens')}: {storm_tokens}",
-            True,
-            self.colors["white"],
+            self.gui.font_small,
+            (200, 20),
         )
-        deck_text = self.font.render(
+        theme.text(
+            self.gui.window,
             f"{self.gui.language_config.get_translation('remaining_cards')}: {remaining_deck_cards}",
-            True,
-            self.colors["white"],
+            self.gui.font_small,
+            (380, 20),
         )
-        self.gui.window.blit(hint_text, (20, 20))
-        self.gui.window.blit(storm_text, (200, 20))
-        self.gui.window.blit(deck_text, (380, 20))
 
     def draw_discard_pile(self) -> None:
         """
@@ -125,27 +128,25 @@ class GameScreen:
         :return: None
         """
         discard_pile = self.client.game_state.discard_pile
+        tiny = ui_font(12)
         for i, card in enumerate(discard_pile):
-            card_rect = pygame.Rect(20 + (i % 16) * 25, 80 + (i // 16) * 25, 20, 20)
+            card_rect = pygame.Rect(20 + (i % 16) * 28, 78 + (i // 16) * 32, 24, 28)
             if isinstance(card, dict):
                 card_color = card["color"]
-                card_valuuue = str(card["value"])
+                card_value = card["value"]
             else:
                 card_color = card.color
-                card_valuuue = str(card.value)
-            if card_color == "colorful":
-                card_color = self.colors["colorful"]
-            pygame.draw.rect(self.gui.window, card_color, card_rect)
-            card_value = self.font.render(card_valuuue, True, self.colors["black"])
-            self.gui.window.blit(card_value, (card_rect.x, card_rect.y))
-        discard_text = self.font.render(
+                card_value = card.value
+            theme.card(self.gui.window, card_rect, card_color, card_value, tiny)
+        theme.text(
+            self.gui.window,
             self.gui.language_config.get_translation("discard_pile")
             + f" {len(discard_pile)} "
             + self.gui.language_config.get_translation("cards"),
-            True,
-            self.colors["white"],
+            self.gui.font_small,
+            (20, 52),
+            theme.MUTED,
         )
-        self.gui.window.blit(discard_text, (20, 50))
 
     def draw_played_piles(self) -> None:
         """
@@ -154,22 +155,16 @@ class GameScreen:
         :return: None
         """
         played_piles = self.client.game_state.fireworks
-        self.gui.window.blit(
-            self.font.render(
-                self.gui.language_config.get_translation("fireworks"),
-                True,
-                self.colors["white"],
-            ),
+        theme.text(
+            self.gui.window,
+            self.gui.language_config.get_translation("fireworks"),
+            self.gui.font_small,
             (20, 220),
+            theme.MUTED,
         )
         for i, (color, pile) in enumerate(played_piles.items()):
-            card_rect = pygame.Rect(20 + i * 40, 250, 30, 30)
-            card_color = color
-            if card_color == "colorful":
-                card_color = self.colors["colorful"]
-            pygame.draw.rect(self.gui.window, card_color, card_rect)
-            card_value = self.font.render(str(pile), True, self.colors["black"])
-            self.gui.window.blit(card_value, (card_rect.x + 5, card_rect.y + 5))
+            card_rect = pygame.Rect(20 + i * 48, 246, 40, 48)
+            theme.card(self.gui.window, card_rect, color, pile, self.gui.font_small)
 
     def draw_player_hands(self) -> None:
         """
@@ -183,54 +178,45 @@ class GameScreen:
             if (
                 player.name == self.client.username
             ):  # player is a dictionary, like game_state, because it is converted by the method in lib
-                hand_text = self.font.render(
-                    f"{player.name} {self.gui.language_config.get_translation('your_cards')}",
-                    True,
-                    self.colors["green"],
-                )
+                label_color = theme.GOOD
+                subtitle = self.gui.language_config.get_translation("your_cards")
             else:
-                hand_text = self.font.render(
-                    f"{player.name}'s {self.gui.language_config.get_translation('cards')}",
-                    True,
-                    self.colors["white"],
-                )
+                label_color = theme.INK
+                subtitle = self.gui.language_config.get_translation("cards")
+            theme.text(self.gui.window, player.name, self.gui.font_small, (20, y_offset + 2), label_color)
+            theme.text(self.gui.window, subtitle, self.gui.font_small, (20, y_offset + 22), label_color)
 
-            self.gui.window.blit(hand_text, (20, y_offset))
             for j, card in enumerate(player.hand):
+                hidden = player.name == self.client.username or player.name == self.observtarget
+                suit_name = "gray" if hidden and card.color_hint == False else card.color
+                show_value = not (hidden and card.value_hint == False)
+                card_rect = pygame.Rect(230 + j * 44, y_offset, 36, 50)
+                theme.card(
+                    self.gui.window,
+                    card_rect,
+                    suit_name,
+                    card.value,
+                    self.gui.font_small,
+                    show_value,
+                )
                 if (
-                    player.name == self.client.username
-                    or player.name == self.observtarget
-                ) and card.color_hint == False:
-                    card_color = self.colors["gray"]
-                else:
-                    if card.color == "colorful":
-                        card_color = self.colors["colorful"]
-                    else:
-                        card_color = card.color
-                card_rect = pygame.Rect(150 + j * 40, y_offset, 30, 50)
-                if (
-                    player.name == self.client.username
-                    or player.name == self.observtarget
-                ) and card.value_hint == False:
+                    self.selected_card.is_selected
+                    and self.selected_card.player == player.name
+                    and self.selected_card.index == j
+                ):
                     pygame.draw.rect(
-                        self.gui.window, card_color, card_rect
-                    )  # Hidden hand
-                else:
-                    pygame.draw.rect(self.gui.window, card_color, card_rect)
-                    card_value = self.font.render(
-                        str(card.value), True, self.colors["black"]
-                    )
-                    self.gui.window.blit(
-                        card_value, (card_rect.x + 15, card_rect.y + 30)
+                        self.gui.window, theme.GOLD, card_rect.inflate(4, 4), width=2, border_radius=6
                     )
 
             if self.observing:
-                watch_button = pygame.Rect(20, y_offset + 30, 80, 30)
-                pygame.draw.rect(self.gui.window, (0, 255, 0), watch_button)
-                watch_text = self.font.render(
-                    self.gui.language_config.get_translation("observe"), True, (0, 0, 0)
+                watch_button = pygame.Rect(20, y_offset + 22, 110, 28)
+                theme.button(
+                    self.gui.window,
+                    watch_button,
+                    self.gui.language_config.get_translation("observe"),
+                    self.gui.font_small,
+                    "quiet",
                 )
-                self.gui.window.blit(watch_text, (155, y_offset + 5))
                 player.watch_button = watch_button
             y_offset += 60
 
@@ -253,24 +239,24 @@ class GameScreen:
                 self.last_player_index = current_index
 
             if self.timer.is_active:
-                self.timer.draw(self.gui.window, self.gui.window_width - 250, 50)
+                self.timer.draw(self.gui.window, self.gui.window_width - 220, 72)
 
                 if self.timer.time_over():
                     self.handle_timer_expiration()
 
         if self.client.username == current_player.name:
-            turn_text = self.font.render(
-                f"{self.gui.language_config.get_translation('your_turn')}",
-                True,
-                self.colors["green"],
-            )
+            turn_label = self.gui.language_config.get_translation("your_turn")
+            turn_color = theme.GOOD
         else:
-            turn_text = self.font.render(
-                f"{self.gui.language_config.get_translation('waiting_for')} {current_player.name}...",
-                True,
-                self.colors["red"],
-            )
-        self.gui.window.blit(turn_text, (20, self.gui.window_height - 200))
+            turn_label = f"{self.gui.language_config.get_translation('waiting_for')} {current_player.name}"
+            turn_color = theme.MUTED
+        theme.text(
+            self.gui.window,
+            turn_label,
+            self.font,
+            (20, self.gui.window_height - 180),
+            turn_color,
+        )
 
     def handle_timer_expiration(self) -> None:
         """
@@ -311,47 +297,44 @@ class GameScreen:
 
         :return: None
         """
-        self.play_button = pygame.Rect(400, 200, 140, 40)
-        pygame.draw.rect(self.gui.window, self.colors["blue"], self.play_button)
-        play_button_text = self.font.render(
+        self.play_button = pygame.Rect(460, 250, 190, 40)
+        self.discard_button = pygame.Rect(668, 250, 190, 40)
+        self.hint_color_button = pygame.Rect(460, 304, 190, 40)
+        self.hint_number_button = pygame.Rect(668, 304, 190, 40)
+        self.exit_button = pygame.Rect(668, 420, 190, 40)
+        theme.button(
+            self.gui.window,
+            self.play_button,
             self.gui.language_config.get_translation("play_card"),
-            True,
-            self.colors["white"],
+            self.gui.font_small,
         )
-        self.gui.window.blit(play_button_text, (self.play_button))
-        self.discard_button = pygame.Rect(600, 200, 140, 40)
-        pygame.draw.rect(self.gui.window, self.colors["blue"], self.discard_button)
-        discard_button_text = self.font.render(
+        theme.button(
+            self.gui.window,
+            self.discard_button,
             self.gui.language_config.get_translation("discard_card"),
-            True,
-            self.colors["white"],
+            self.gui.font_small,
+            "quiet",
         )
-        self.gui.window.blit(discard_button_text, (self.discard_button))
-
-        # Hint choices
-        self.hint_color_button = pygame.Rect(400, 300, 140, 40)
-        pygame.draw.rect(self.gui.window, self.colors["blue"], self.hint_color_button)
-        color_button_text = self.font.render(
+        theme.button(
+            self.gui.window,
+            self.hint_color_button,
             self.gui.language_config.get_translation("Color Hint"),
-            True,
-            self.colors["white"],
+            self.gui.font_small,
+            "quiet",
         )
-        self.gui.window.blit(color_button_text, self.hint_color_button)
-        self.hint_number_button = pygame.Rect(600, 300, 140, 40)
-        pygame.draw.rect(self.gui.window, self.colors["blue"], self.hint_number_button)
-        number_button_text = self.font.render(
+        theme.button(
+            self.gui.window,
+            self.hint_number_button,
             self.gui.language_config.get_translation("Number Hint"),
-            True,
-            self.colors["white"],
+            self.gui.font_small,
+            "quiet",
         )
-        self.gui.window.blit(number_button_text, self.hint_number_button)
-
-        pygame.draw.rect(self.gui.window, self.colors["red"], self.exit_button)
-        exit_button_text = self.font.render(
-            self.gui.language_config.get_translation("exit"), True, self.colors["white"]
-        )
-        self.gui.window.blit(
-            exit_button_text, (self.exit_button.x + 10, self.exit_button.y + 10)
+        theme.button(
+            self.gui.window,
+            self.exit_button,
+            self.gui.language_config.get_translation("exit"),
+            self.gui.font_small,
+            "danger",
         )
 
     def draw_watch_all_button(self) -> None:
@@ -363,11 +346,13 @@ class GameScreen:
 
         :return: None
         """
-        pygame.draw.rect(self.gui.window, (255, 0, 0), self.watch_all_button)
-        watch_all_text = self.font.render(
-            self.gui.language_config.get_translation("watch_all"), True, (255, 255, 255)
+        theme.button(
+            self.gui.window,
+            self.watch_all_button,
+            self.gui.language_config.get_translation("watch_all"),
+            self.gui.font_small,
+            "quiet",
         )
-        self.gui.window.blit(watch_all_text, (405, 155))
 
     def draw_endgame_conditions(self) -> None:
         """
@@ -397,7 +382,7 @@ class GameScreen:
         log_area_rect = pygame.Rect(
             20, self.gui.window_height - 130, self.gui.window_width - 40, 110
         )
-        pygame.draw.rect(self.gui.window, self.colors["gray"], log_area_rect)
+        theme.panel(self.gui.window, log_area_rect)
 
         # Draw scrollbar if messages exceed visible area
         max_visible_messages = 5
@@ -434,7 +419,7 @@ class GameScreen:
             - self.log_scroll_offset
         ]
         for i, msg in enumerate(visible_messages):
-            text_surface = self.font.render(msg, True, self.colors["blue"])
+            text_surface = self.gui.font_small.render(msg, True, theme.INK)
             self.gui.window.blit(
                 text_surface, (log_area_rect.x + 10, log_area_rect.y + 10 + i * 20)
             )
@@ -539,7 +524,7 @@ class GameScreen:
         for player_index, player in enumerate(self.client.game_state.players):
             current_y = y_offset + (player_index * 60)
             for i, card in enumerate(player.hand):
-                card_rect = pygame.Rect(150 + i * 40, current_y, 30, 50)
+                card_rect = pygame.Rect(230 + i * 44, current_y, 36, 50)
                 if card_rect.collidepoint(mouse_pos):
                     self.selected_card.set_selection(player.name, i)
 

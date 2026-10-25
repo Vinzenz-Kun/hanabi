@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("SDL_WINDOWS_DPI_AWARENESS", "permonitorv2")
+
 from hanabi.gui.widgets.cardselection import CardSelection
 import pygame  # type: ignore
 from hanabi.gui.screen.server_connection import ServerConnectScreen
@@ -5,6 +9,8 @@ from hanabi.gui.screen.game_connection import GameConnectScreen
 from hanabi.gui.screen.lobby_screen import LobbyScreen
 from hanabi.gui.screen.game_screen import GameScreen
 from hanabi.gui.screen.result import ResultScreen
+from hanabi.gui import theme
+from hanabi.gui.display import init_window, scale_event
 from hanabi.gui.fonts import ui_font
 from hanabi.gui.language_config import LanguageConfig
 from hanabi.gui.screen.menu import MenuScreen
@@ -20,14 +26,13 @@ class GUI:
         :type client: hanabi.core.client_launcher.Client
         :return: None
         """
-        pygame.init()
         self.client = client
         self.language_config = LanguageConfig()
         self.window_width = 900
         self.window_height = 800
-        self.font = ui_font(20)
-        self.font_small = ui_font(14)
-        self.window = pygame.display.set_mode((self.window_width, self.window_height))
+        self.window = init_window(self.window_width, self.window_height)
+        self.font = ui_font(22)
+        self.font_small = ui_font(16)
         self.running = True
         self.current_screen = "server_connect"
         self.screens = {
@@ -64,7 +69,7 @@ class GUI:
 
         :return: None
         """
-        events = pygame.event.get()
+        events = [scale_event(event) for event in pygame.event.get()]
         if self.current_screen in self.screens:
             self.screens[self.current_screen].handle_input(events)
             self.screens[self.current_screen].render()
@@ -204,10 +209,11 @@ class GUI:
         :param message: The string to display in the popup message.
         :return: None
         """
-        font = ui_font(24)
-        text = font.render(message, True, (255, 255, 255))
+        font = ui_font(22)
+        text = font.render(message, True, theme.INK)
         rect = text.get_rect(center=(self.window_width // 2, self.window_height // 2))
-        pygame.draw.rect(self.window, (0, 0, 0), rect.inflate(20, 10))
+        box = rect.inflate(48, 28)
+        theme.panel(self.window, box)
         self.window.blit(text, rect)
 
 

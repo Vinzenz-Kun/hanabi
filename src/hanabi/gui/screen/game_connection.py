@@ -1,4 +1,5 @@
 import pygame
+from hanabi.gui import theme
 from hanabi.gui.fonts import ui_font
 from hanabi.gui.widgets.colors import Colors as colors
 
@@ -32,8 +33,8 @@ class GameConnectScreen:
         :return: None
         """
 
-        self.refresh_button = pygame.Rect(23, 50, 120, 30)
-        self.create_button = pygame.Rect(150, 50, 180, 30)
+        self.refresh_button = pygame.Rect(32, 84, 140, 36)
+        self.create_button = pygame.Rect(184, 84, 220, 36)
         self.join_buttons = {}
         self.observe_buttons = {}
         self.language_button = pygame.Rect(self.gui.window_width - 200, 20, 180, 40)
@@ -44,73 +45,61 @@ class GameConnectScreen:
 
         :return: None
         """
-        self.gui.window.fill(self.colors["black"])
+        theme.paint(self.gui.window)
         pygame.display.set_caption(
             self.gui.language_config.get_translation("game_connect")
         )
-        title = self.font.render(
+        theme.text(
+            self.gui.window,
             self.gui.language_config.get_translation("open_games"),
-            True,
-            self.colors["white"],
+            ui_font(32),
+            (32, 24),
+            theme.GOLD,
         )
-        self.gui.window.blit(title, (20, 20))
-
-        # Refresh Button
-        pygame.draw.rect(self.gui.window, self.colors["green"], self.refresh_button)
-        refresh_text = self.font.render(
+        theme.button(
+            self.gui.window,
+            self.refresh_button,
             self.gui.language_config.get_translation("refresh"),
-            True,
-            self.colors["black"],
+            self.font,
+            "quiet",
         )
-        self.gui.window.blit(refresh_text, (30, 55))
-
-        # Create Game Button
-        pygame.draw.rect(self.gui.window, self.colors["green"], self.create_button)
-        create_text = self.font.render(
+        theme.button(
+            self.gui.window,
+            self.create_button,
             self.gui.language_config.get_translation("new_game"),
-            True,
-            self.colors["black"],
+            self.font,
         )
-        self.gui.window.blit(create_text, (150, 55))
 
-        # Display available games
         self.join_buttons.clear()
         self.observe_buttons.clear()
         for i, game_id in enumerate(self.gui.game_ids):
-            game_text = self.font.render(
-                f"Game ID: {game_id}", True, self.colors["white"]
-            )
-            self.gui.window.blit(game_text, (20, 100 + i * 30))
-
-            # Join button for each game
-            join_button = pygame.Rect(200, 100 + i * 30, 100, 20)
+            row = pygame.Rect(32, 140 + i * 52, self.gui.window_width - 64, 44)
+            theme.panel(self.gui.window, row)
+            theme.text(self.gui.window, f"Game {game_id}", self.font, (row.x + 16, row.y + 10))
+            join_button = pygame.Rect(row.right - 250, row.y + 6, 110, 32)
+            observe_button = pygame.Rect(row.right - 128, row.y + 6, 110, 32)
             self.join_buttons[f"join_{game_id}"] = join_button
-            pygame.draw.rect(self.gui.window, self.colors["blue"], join_button)
-            join_text = self.font.render(
-                self.gui.language_config.get_translation("join"),
-                True,
-                self.colors["white"],
-            )
-            self.gui.window.blit(join_text, (join_button.x + 10, join_button.y))
-
-            # Observe button for each game
-            observe_button = pygame.Rect(join_button.right + 10, 100 + i * 30, 100, 20)
             self.observe_buttons[f"observe_{game_id}"] = observe_button
-            pygame.draw.rect(self.gui.window, self.colors["gray"], observe_button)
-            observe_text = self.font.render(
-                self.gui.language_config.get_translation("observe"),
-                True,
-                self.colors["white"],
+            theme.button(
+                self.gui.window,
+                join_button,
+                self.gui.language_config.get_translation("join"),
+                self.font,
             )
-            self.gui.window.blit(
-                observe_text, (observe_button.x + 10, observe_button.y)
+            theme.button(
+                self.gui.window,
+                observe_button,
+                self.gui.language_config.get_translation("observe"),
+                self.font,
+                "quiet",
             )
 
-        pygame.draw.rect(self.gui.window, (200, 200, 200), self.language_button)
-        language_text = self.font.render(
-            self.gui.language_config.get_translation("Change Language"), True, (0, 0, 0)
+        theme.language_chip(
+            self.gui.window,
+            self.language_button,
+            self.font,
+            self.gui.language_config.get_translation("Change Language"),
         )
-        self.gui.window.blit(language_text, (self.gui.window_width - 190, 30))
 
     def handle_input(self, events: list) -> None:
         """

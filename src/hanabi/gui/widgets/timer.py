@@ -1,4 +1,5 @@
 import pygame
+from hanabi.gui import theme
 from hanabi.gui.fonts import ui_font
 import time
 
@@ -21,11 +22,10 @@ class Timer:
 
         self.timer_active = False
 
-        # Colors for different timer states
-        self.green = pygame.Color(0, 255, 0)
-        self.yellow = pygame.Color(255, 255, 0)
-        self.red = pygame.Color(255, 0, 0)
-        self.gray = pygame.Color(128, 128, 128)
+        self.green = theme.GOOD
+        self.yellow = pygame.Color(186, 140, 214)
+        self.red = theme.DANGER
+        self.gray = theme.PANEL
 
     def start(self) -> None:
         """
@@ -101,15 +101,12 @@ class Timer:
         else:
             color = self.red
 
-        # Draw timer background
-        pygame.draw.rect(window, self.gray, (x, y, 200, 30))
-
-        # Draw timer bar
-        width = int((remaining / self.time_limit) * 200)
-        pygame.draw.rect(window, color, (x, y, width, 30))
-
-        # Draw time text
+        track = pygame.Rect(x, y, 200, 28)
+        pygame.draw.rect(window, self.gray, track, border_radius=8)
+        width = int((remaining / self.time_limit) * 200) if self.time_limit else 0
+        if width > 0:
+            pygame.draw.rect(window, color, (x, y, width, 28), border_radius=8)
+        pygame.draw.rect(window, theme.EDGE, track, width=1, border_radius=8)
         seconds = int(remaining)
-        text = f"{seconds}s"
-        text_surface = self.font.render(text, True, (255, 255, 255))
-        window.blit(text_surface, (x + 85, y + 5))
+        text_surface = self.font.render(f"{seconds}s", True, theme.INK)
+        window.blit(text_surface, text_surface.get_rect(center=track.center))

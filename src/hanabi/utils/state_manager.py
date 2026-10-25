@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import pygame
 from hanabi.core.game import Game  # Import the Game class used for state management
 from hanabi.utils.lib import class_to_dict
@@ -8,9 +9,17 @@ from hanabi.utils.lib import (
 )  # Ensure these conversion methods are correctly implemented in lib
 
 
+def _save_dir() -> str:
+    if getattr(sys, "frozen", False):
+        base = os.path.dirname(sys.executable)
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base, "saved_games")
+
+
 class GameStateManager:
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    SAVE_DIR = os.path.join(BASE_DIR, "saved_games")
+    SAVE_DIR = _save_dir()
 
     @staticmethod
     def ensure_save_directory() -> None:
