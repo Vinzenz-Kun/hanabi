@@ -13,10 +13,30 @@ from typing import Tuple
 import threading
 import sys
 import json
-import hanabi.gui.gui_launcher as gui  # Import the GUI class to manage the user interface
 import os
 import hanabi.utils.lib as lib  # Import the dict_to_game function
 import time
+
+
+def _gui_module():
+    import hanabi.gui.gui_launcher as gui
+
+    return gui
+
+
+def _set_game_screen_observing(value: bool) -> None:
+    """Set GameScreen.observing only if the GUI is already imported.
+
+    Tests construct Client without pygame. Importing the GUI here would fail
+    GitHub Actions the same way a top-level gui import did.
+    """
+    for name in ("hanabi.gui.gui_launcher", "hanabi.gui.screen.game_screen"):
+        module = sys.modules.get(name)
+        if module is None:
+            continue
+        game_screen = getattr(module, "GameScreen", None)
+        if game_screen is not None:
+            game_screen.observing = value
 
 # Get the absolute path to the directory containing this script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -195,7 +215,7 @@ class Client:
                 self.gui.visited_screens.append("lobby")
                 self.gui.current_screen = "lobby"
                 self.status = "host"
-                gui.GameScreen.observing = False
+                _set_game_screen_observing(False)
                 self.logger.info(
                     f"Transitioned to lobby with Game ID: {self.game_id}\n"
                 )
@@ -396,7 +416,7 @@ class Client:
         :return: None.
         """
         self.logger.debug(f"Function: join_lobby {game_id}\n")
-        gui.GameScreen.observing = False
+        _set_game_screen_observing(False)
         self.send_message(
             {"type": "join_lobby", "game_id": game_id, "username": self.username}
         )
@@ -409,10 +429,10 @@ class Client:
         :return: None.
         """
         self.logger.debug(f"Function: observe_lobby {game_id}\n")
+        _set_game_screen_observing(True)
         self.send_message(
             {"type": "observe_lobby", "game_id": game_id, "username": self.username}
         )
-        gui.GameScreen.observing = True
 
     def finalize_lobby(self) -> None:
         """Sends a request to finalize the lobby and start the game with the preferred settings.
@@ -538,7 +558,7 @@ class Client:
         :return: None.
         """
         self.logger.info("updating gui\n")
-        self.gui = gui.GUI(self)
+        self.gui = _gui_module().GUI(self)
         self.gui.run()
 
 

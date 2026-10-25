@@ -13,7 +13,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt pytest
-      - run: python -m pytest src/test -q
+      - name: Game, client, and server tests
+        run: python -m pytest src/test -q --tb=short
         env:
           PYTHONPATH: src
           SDL_VIDEODRIVER: dummy
+          SDL_AUDIODRIVER: dummy
+          PYGAME_HIDE_SUPPORT_PROMPT: "1"

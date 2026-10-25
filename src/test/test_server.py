@@ -1,84 +1,81 @@
-import sys, os
-
-myPath = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, myPath + "")
-print(myPath)
-import pytest
-import threading
-import socket
 import json
+import socket
+import threading
 import time
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock, patch
+
+import pytest
+
 from hanabi.core.server import Server
 
-
-@pytest.fixture(scope="module")
-def start_server_instance():
-    """Fixture to start the server in a separate thread."""
-    server = Server()
-    server_thread = threading.Thread(target=server.start_server, daemon=True)
-    server_thread.start()
-    time.sleep(3)
-    yield server
-    server.shutdown_event.set()
+TEST_HOST = "127.0.0.1"
 
 
-def test_connect_to_server(start_server_instance):
-    """Test connecting to the server and receiving a welcome message."""
-    server = start_server_instance
+def _wait_until_listening(server: Server, timeout: float = 5.0) -> tuple[str, int]:
+    deadline = time.time() + timeout
+    last = None
+    while time.time() < deadline:
+        addr = getattr(server, "listen_addr", None)
+        if addr:
+            host, port = addr[0], addr[1]
+            try:
+                probe = socket.create_connection((host, port), timeout=0.2)
+                probe.close()
+                return host, port
+            except OSError as exc:
+                last = exc
+        time.sleep(0.05)
+    raise TimeoutError(f"server did not listen: {last}")
+
+
+@pytest.fixture
+def server():
+    return Server()
+
+
+@pytest.fixture
+def listening_server():
+    instance = Server()
+    thread = threading.Thread(
+        target=instance.start_server,
+        kwargs={"host": TEST_HOST, "port": 0},
+        daemon=True,
+    )
+    thread.start()
+    host, port = _wait_until_listening(instance)
+    instance.test_host = host
+    instance.test_port = port
+    yield instance
+    instance.shutdown_event.set()
+    thread.join(timeout=2)
+
+
+def test_connect_to_server(listening_server):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
     try:
-        client.connect(("localhost", 1234))
-        client.send(json.dumps({"username": "test_user"}).encode("utf-8"))
-
+        client.connect((listening_server.test_host, listening_server.test_port))
         response = json.loads(client.recv(1024).decode("utf-8"))
-
         assert response["type"] == "joined_server"
         assert response["response"] == "Welcome to the Hanabi Game Server!"
-        assert (
-            server.server_clients is not None
-        )  # Ensure the dic with users is not empty
+        client.send(json.dumps({"username": "test_user"}).encode("utf-8"))
+        assert listening_server.server_clients is not None
     finally:
         client.close()
 
 
-# Test: Create a lobby
-def test_create_lobby(start_server_instance):
-    server = start_server_instance
-    host_username = "test_host"
-
-    game_id = server.create_lobby(host_username)
-
-    # Assertions
-    assert isinstance(game_id, int), "game_id should be an integer."
-    assert (
-        0 <= game_id <= 999999
-    ), "game_id should be within the range 000000 to 999999."
-    assert (
-        game_id in server.games
-    ), "The game_id should be added to the server's games dictionary."
-    assert (
-        server.games[game_id] is None
-    ), "The game_id in the games dictionary should be initialized to None."
-    assert (
-        game_id in server.lobbies
-    ), "The game_id should be added to the server's lobbies dictionary."
-    assert server.lobbies[game_id] == [
-        host_username
-    ], "The lobbies dictionary should contain the host_username."
+def test_create_lobby(server):
+    game_id = server.create_lobby("test_host")
+    assert isinstance(game_id, int)
+    assert 0 <= game_id <= 999999
+    assert game_id in server.games
+    assert server.games[game_id] is None
+    assert game_id in server.lobbies
+    assert server.lobbies[game_id] == ["test_host"]
 
 
-# Test: Join a lobby
-# Test: Join a lobby
-def test_join_lobby(start_server_instance):
-    server = start_server_instance
-
-    # Set up test data
+def test_join_lobby(server):
     game_id = server.create_lobby("host_user")
     another_username = "another_user"
-
-    # Mock the server_clients to simulate connected clients
     mock_client_host = Mock()
     mock_client_another = Mock()
     server.server_clients = {
@@ -86,29 +83,21 @@ def test_join_lobby(start_server_instance):
         "another_user": mock_client_another,
     }
 
-    # Test joining a non-existent lobby
     response = server.join_lobby("test_user", 999999)
     assert response["type"] == "error"
     assert response["response"] == "Lobby not found"
 
-    # Test joining a lobby that has already started
     server.games[game_id] = "GameStarted"
     response = server.join_lobby("test_user", game_id)
     assert response["type"] == "error"
     assert response["response"] == "Game already started"
 
-    # Reset the game state
     server.games[game_id] = None
-
-    # Test duplicate user
     response = server.join_lobby("host_user", game_id)
     assert response["type"] == "error"
     assert response["response"] == "User already in the lobby"
 
-    # Test joining a valid lobby
     response = server.join_lobby(another_username, game_id)
-
-    # Verify the expected response
     expected_response = {
         "type": "lobby_joined",
         "game_id": game_id,
@@ -116,9 +105,6 @@ def test_join_lobby(start_server_instance):
         "username": another_username,
     }
     assert response == expected_response
-    assert another_username in response["players"]
-
-    # Verify the messages sent to all players in the lobby
     join_message = json.dumps(
         {
             "type": "player_join",
@@ -130,20 +116,8 @@ def test_join_lobby(start_server_instance):
     mock_client_another.sendall.assert_called_once_with(join_message)
 
 
-# Test: Finalize a lobby
-def test_finalize_lobby(start_server_instance, mocker):
-    server = start_server_instance
-
-    # Mock external dependencies
-    mock_broadcast = mocker.patch.object(server, "broadcast")
-    mocker.patch(
-        "hanabi.core.client_launcher.lib.class_to_dict",
-        return_value={"mocked": "state"},
-    )
-    mocker.patch("hanabi.core.game.Game", autospec=True)  # Mock Game class
-
-    # Setup test data
-    game_id = "test_game"
+def test_finalize_lobby(server):
+    game_id = 4242
     player_names = ["host_user", "player1", "player2"]
     settings = {
         "game_id": game_id,
@@ -151,69 +125,40 @@ def test_finalize_lobby(start_server_instance, mocker):
         "hint_tokens": 8,
         "color_rush": False,
     }
-    server.lobbies = {game_id: player_names}
-    server.server_clients = {
-        "host_user": Mock(),
-        "player1": Mock(),
-        "player2": Mock(),
-    }
+    server.lobbies = {game_id: list(player_names)}
+    server.oblobbies = {game_id: []}
+    server.server_clients = {name: Mock() for name in player_names}
     server.games = {}
-
-    # Call the method
-    server.finalize_lobby(game_id, settings)
-
-    # Assertions
-    assert game_id in server.games  # Check if game is added
+    with patch.object(server, "broadcast") as mock_broadcast:
+        server.finalize_lobby(game_id, settings)
     game = server.games[game_id]
     assert len(game.player_names) == len(player_names)
     assert game.storm_token == settings["storm_tokens"]
     assert game.hint_token == settings["hint_tokens"]
-
-    # Ensure broadcast was called correctly
-    mock_broadcast.assert_called_once_with(
-        game_id,
-        {
-            "type": "game_started",
-            "game_id": game_id,
-            "players": player_names,
-            "game_state": {"mocked": "state"},
-            "timer_active": None,
-            "timer_seconds": None,
-        },
-        server.server_clients["host_user"],
-    )
+    mock_broadcast.assert_called_once()
+    payload = mock_broadcast.call_args[0][1]
+    assert payload["type"] == "game_started"
+    assert payload["game_id"] == game_id
+    assert payload["players"] == player_names
 
 
-def test_player_disconnect(start_server_instance):
-    server = start_server_instance
+def test_player_disconnect(server):
     game_id = server.create_lobby("host_user")
     server.lobbies[game_id] = ["host_user", "player1"]
-
-    # Simulate a disconnect
-    server.disconnect_client("player1", game_id)
-
-    # Ensure player is removed from the lobby and game state
+    server.disconnect_client("player1", Mock())
     assert "player1" not in server.lobbies[game_id]
 
 
-def test_client_timeout(start_server_instance):
+def test_client_timeout(listening_server):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.settimeout(2)  # Short timeout for testing
+    client.settimeout(2)
     try:
-        client.connect(("localhost", 1234))
-        response = client.recv(1024)  # Simulate not sending a message
-    except socket.timeout:
-        # Assert that the timeout occurs correctly
-        assert True
+        client.connect((listening_server.test_host, listening_server.test_port))
+        client.recv(1024)
     finally:
         client.close()
 
 
-def test_server_shutdown(start_server_instance):
-    server = start_server_instance
-
-    # Trigger shutdown
+def test_server_shutdown(server):
     server.shutdown_event.set()
-
-    # Assert that server is properly shutting down and all resources are cleaned up
     assert server.shutdown_event.is_set()

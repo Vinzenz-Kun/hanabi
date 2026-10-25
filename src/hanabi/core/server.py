@@ -69,14 +69,24 @@ class Server:
         :return: None
         """
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.bind((host, port))
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        bind_host = host or "0.0.0.0"
+        server_socket.bind((bind_host, port))
+        self.listen_addr = server_socket.getsockname()
         server_socket.listen(10)
         server_logger.info(
-            f"(in server.start_server) Server listening on {host}:{port}"
+            f"(in server.start_server) Server listening on {self.listen_addr[0]}:{self.listen_addr[1]}"
         )
 
-        # Start console listener thread
-        threading.Thread(target=self.console_input_listener, daemon=True).start()
+        stdin = getattr(sys, "stdin", None)
+        interactive = False
+        if stdin is not None:
+            try:
+                interactive = stdin.isatty()
+            except (OSError, ValueError):
+                interactive = False
+        if interactive:
+            threading.Thread(target=self.console_input_listener, daemon=True).start()
 
         try:
             server_logger.info("Type shutdown to interrupt the server\n")
@@ -607,7 +617,7 @@ class Server:
         while not self.shutdown_event.is_set():
             try:
                 command = input()
-            except EOFError:
+            except (EOFError, OSError):
                 return
             if command.lower() == "shutdown":
                 server_logger.info("Shutdown command received. Closing server...\n")

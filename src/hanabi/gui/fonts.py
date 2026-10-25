@@ -40,7 +40,10 @@ def _font(pixel_size: int) -> pygame.freetype.Font:
     if not pygame.freetype.get_init():
         pygame.freetype.init()
     face = _face()
-    font = pygame.freetype.Font(face, pixel_size) if face else pygame.freetype.SysFont("Yu Gothic UI", pixel_size)
+    if face:
+        font = pygame.freetype.Font(face, pixel_size)
+    else:
+        font = pygame.freetype.Font(None, pixel_size)
     font.antialiased = True
     font.pad = True
     _FONTS[pixel_size] = font
